@@ -1,26 +1,132 @@
-# Python
+# Python / Backend (FastAPI, SQLAlchemy, Alembic)
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-.env
-venv/
-
-# Node
-node_modules/
-dist/
+*.py[cod]
+*$py.class
+*.so
+.Python
 build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+coverage.xml
+*.cover
+*.coverage.*
+htmlcov/
+.tox/
+.nox/
+nox/
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.mo
+*.pot
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+venv/
+.env
+.env.*
+!.env.example          
+alembic.ini
 
-# React Native
+# Node / Frontend (Vite + React + TypeScript)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.yarn-integrity
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Vite build output
+dist/
+dist-ssr/
+*.local
+
+# React Native / Expo
 .expo/
 .expo-shared/
+android/.gradle/
+android/app/build/
+android/local.properties
+ios/.build/
+ios/Pods/
+ios/Podfile.lock
+*.jks
+*.keystore
+*.mobileprovision
+*.xcworkspace
+*.xcodeproj/project.xcworkspace
+*.xcuserstate
+*.xcscheme
 
-# OS files
+# Logs & Temp
+*.log
+*.logs
+*.stackdump
 .DS_Store
 Thumbs.db
+ehthumbs.db
+Icon?
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.fseventsd
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
 
-# IDE
+# Editor / IDE
 .vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
 
-# Logs
-*.log
+# Testing & Coverage
+coverage/
+.nyc_output/
+jest/
+__tests__/__snapshots__/
+
+# Misc
+*.bak
+*.backup
+*.tmp
+*.swp
+.DS_Store
