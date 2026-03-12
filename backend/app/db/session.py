@@ -1,37 +1,50 @@
 from urllib.parse import quote_plus
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from app.core.config import Settings, settings
-from dotmap import DotMap
 
-db = {}
-for key, value in vars(settings).items():
-    if key.startswith("db_"):   
-       _key = key.replace("db_", "")
-       db[_key] = value
-db = DotMap(db)
+from app.core.config import get_settings
 
-dialect = 'postgresql'
-password = quote_plus(db.password)
-SQLALCHEMY_DATABASE_URL = f'{dialect}://{db.user}:{password}@{db.host}:{db.port}/{db.name}'
 
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    echo=True,  
+# Load cached settings
+settings = get_settings()
+
+
+# Build database URL safely
+password = quote_plus(settings.db_password)
+
+DATABASE_URL = (
+    f"postgresql://{settings.db_user}:{password}"
+    f"@{settings.db_host}:{settings.db_port}/{settings.db_name}"
 )
 
+
+# Create SQLAlchemy engine
+engine = create_engine(
+    DATABASE_URL,
+    echo=True,  # print SQL queries (good during development)
+)
+
+
+# Session factory
 SessionLocal = sessionmaker(
     bind=engine,
     autocommit=False,
     autoflush=False,
 )
 
+
+# FastAPI dependency
 def get_db():
+    """
+    Provides a database session to API routes.
+
+    FastAPI automatically:
+    - creates session
+    - closes session after request
+    """
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
-
-def get_settings():
-    return Settings()

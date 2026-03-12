@@ -1,6 +1,7 @@
 import uvicorn
-from app.core.config import settings
+from app.core.config import get_settings
 
+settings = get_settings ()
 
 def start_server():
     is_prod = settings.app_env.lower() == "prod"

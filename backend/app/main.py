@@ -35,11 +35,13 @@ app.include_router(health_router)
 def health():
     return {"status": "ok"}
 
-@app.get('/db', tags=['root'])
-async def get_db(
-        settings: Settings = Depends(get_settings)
-    ) -> dict:
-    return { 'db': settings.db_engine }
+@app.get("/db", tags=["root"])
+async def get_db_config():
+    """
+    Simple debug endpoint to verify DB configuration loaded correctly
+    """
+    settings = get_settings()
+    return {"db_engine": settings.db_engine}
 
 
 @app.get("/")

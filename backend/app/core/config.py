@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -34,9 +36,19 @@ class Settings(BaseSettings):
     )
 
 
-# Instantiate settings globally
-settings = Settings()
+# ---------------------------------------------------
+# Cached settings loader (important)
+# ---------------------------------------------------
+@lru_cache
+def get_settings() -> Settings:
+    """
+    Returns a cached Settings instance.
 
+    lru_cache ensures:
+    - Settings is created once
+    - reused everywhere
+    """
+    return Settings()
 
 APP_CONFIG = dict(
     title="Nutrition Scanner API",
