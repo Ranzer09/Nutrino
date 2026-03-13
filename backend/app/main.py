@@ -5,6 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.health import router as health_router
+from app.api.products import router as product_router
 from app.core.config import APP_CONFIG, Settings
 from app.core.exception_handler import http_exception_handler, request_validation_exception_handler, unhandled_exception_handler
 from app.core.middleware import log_request_middleware
@@ -30,6 +31,7 @@ app.add_exception_handler(HTTPException, http_exception_handler)
 app.add_exception_handler(Exception, unhandled_exception_handler)
 
 app.include_router(health_router)
+app.include_router(product_router)
 
 @app.get("/health")
 def health():
