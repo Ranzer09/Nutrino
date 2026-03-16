@@ -1,7 +1,28 @@
-def traffic_light(value: float | None, low: float, high: float):
+from typing import Optional
+
+
+# WHO / international guideline daily limits
+DAILY_LIMITS = {
+    "sugars": 50,          # grams
+    "saturated_fat": 20,   # grams
+    "fat": 70,             # grams
+    "salt": 5              # grams
+}
+
+
+def calculate_percent(value: Optional[float], limit: float) -> Optional[int]:
     """
-    Generic traffic light evaluator.
+    Convert nutrient value into % of WHO daily limit.
     """
+
+    if value is None:
+        return None
+
+    percent = (value / limit) * 100
+    return round(percent)
+
+
+def traffic_light(value: Optional[float], low: float, high: float) -> str:
 
     if value is None:
         return "unknown"
@@ -15,9 +36,21 @@ def traffic_light(value: float | None, low: float, high: float):
     return "red"
 
 
+def analyze_nutrient(value: Optional[float], daily_limit: float, low: float, high: float):
+    """
+    Build structured nutrient analysis.
+    """
+
+    return {
+        "value": value,
+        "percent_daily": calculate_percent(value, daily_limit),
+        "level": traffic_light(value, low, high)
+    }
+
+
 def analyze_nutrition(product: dict) -> dict:
     """
-    Analyze nutrition values and assign traffic light colors.
+    Perform full nutrition analysis using WHO + UK traffic light rules.
     """
 
     sugars = product.get("sugars")
@@ -26,8 +59,28 @@ def analyze_nutrition(product: dict) -> dict:
     salt = product.get("salt")
 
     return {
-        "sugars_level": traffic_light(sugars, 5, 22.5),
-        "saturated_fat_level": traffic_light(saturated_fat, 1.5, 5),
-        "fat_level": traffic_light(fat, 3, 17.5),
-        "salt_level": traffic_light(salt, 0.3, 1.5),
+        "sugars": analyze_nutrient(
+            sugars,
+            DAILY_LIMITS["sugars"],
+            low=5,
+            high=22.5
+        ),
+        "saturated_fat": analyze_nutrient(
+            saturated_fat,
+            DAILY_LIMITS["saturated_fat"],
+            low=1.5,
+            high=5
+        ),
+        "fat": analyze_nutrient(
+            fat,
+            DAILY_LIMITS["fat"],
+            low=3,
+            high=17.5
+        ),
+        "salt": analyze_nutrient(
+            salt,
+            DAILY_LIMITS["salt"],
+            low=0.3,
+            high=1.5
+        )
     }
