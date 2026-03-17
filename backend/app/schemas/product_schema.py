@@ -24,5 +24,5 @@ class ProductResponse(BaseModel):
 
     cached_at: datetime
 
-    class Config:
+    class ConfigDict:
         from_attributes = True

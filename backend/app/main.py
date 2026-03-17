@@ -1,5 +1,3 @@
-# Main entry point of the FastAPI application
-
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
