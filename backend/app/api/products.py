@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
-
+from fastapi import Response
 from app.db.session import get_db
 from app.services.product_service import get_product_by_barcode, create_product
 from app.services.openfoodfacts_service import fetch_product_from_openfoodfacts
@@ -15,7 +15,8 @@ router = APIRouter(prefix="/products", tags=["products"])
 
 @router.get("/{barcode}",response_model=BarcodeLookupResponse)
 @limiter.limit("10/minute") 
-async def get_product(barcode: str, request: Request,db: Session = Depends(get_db)):
+async def get_product(barcode: str, response: Response, request: Request,db: Session = Depends(get_db)):
+    response.headers["Cache-Control"] = "public, max-age=3600"
 
     product = get_product_by_barcode(db, barcode)
 
