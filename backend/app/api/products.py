@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -9,12 +9,13 @@ from app.schemas.barcode_schema import BarcodeLookupResponse
 from app.schemas.product_schema import ProductResponse
 from app.schemas.nutrition_schema import NutritionAnalysisResponse
 from app.services.nutrition_insights import generate_nutrition_insights
+from app.core.rate_limiter import limiter
 
 router = APIRouter(prefix="/products", tags=["products"])
 
-
-@router.get("/{barcode}", response_model=BarcodeLookupResponse)
-async def get_product(barcode: str, db: Session = Depends(get_db)):
+@router.get("/{barcode}",response_model=BarcodeLookupResponse)
+@limiter.limit("10/minute") 
+async def get_product(barcode: str, request: Request,db: Session = Depends(get_db)):
 
     product = get_product_by_barcode(db, barcode)
 

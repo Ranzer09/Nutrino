@@ -1,6 +1,11 @@
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from fastapi.responses import JSONResponse
+
+from app.core.rate_limiter import limiter
 
 from app.api.health import router as health_router
 from app.api.products import router as product_router
@@ -13,6 +18,20 @@ origins = [
     "*",
 ]
 app = FastAPI(**APP_CONFIG)
+app.state.limiter = limiter
+
+app.add_middleware(SlowAPIMiddleware)
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_handler(request, exc):
+    return JSONResponse(
+        status_code=429,
+        content={
+            "status": 429,
+            "error": "Too Many Requests",
+            "message": "Rate limit exceeded. Please try again after 1 minute."
+        },
+    )
 
 app.middleware("http")(log_request_middleware)
 
