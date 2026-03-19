@@ -30,7 +30,7 @@ def traffic_light(value: Optional[float], low: float, high: float) -> str:
     if value <= low:
         return "green"
 
-    if value <= high:
+    if value < high:
         return "amber"
 
     return "red"
@@ -50,7 +50,7 @@ def analyze_nutrient(value: Optional[float], daily_limit: float, low: float, hig
 
 def analyze_nutrition(product: dict) -> dict:
     """
-    Perform full nutrition analysis using WHO + UK traffic light rules.
+    Perform full nutrition analysis using WHO + traffic light rules.
     """
 
     sugars = product.get("sugars")

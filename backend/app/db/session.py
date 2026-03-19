@@ -22,7 +22,7 @@ DATABASE_URL = (
 # Create SQLAlchemy engine
 engine = create_engine(
     DATABASE_URL,
-    echo=True,  # print SQL queries (good during development)
+    echo=True,
 )
 
 
