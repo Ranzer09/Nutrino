@@ -17,7 +17,18 @@ from app.db.session import get_settings
 origins = [
     "*",
 ]
-app = FastAPI(**APP_CONFIG)
+app = FastAPI(**APP_CONFIG,
+    openapi_tags=[
+        {
+            "name": "health",
+            "description": "Health check endpoints",
+        },
+        {
+            "name": "products",
+            "description": "Product lookup and nutrition analysis",
+        },
+    ],
+)
 app.state.limiter = limiter
 
 app.add_middleware(SlowAPIMiddleware)

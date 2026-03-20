@@ -51,7 +51,18 @@ def get_settings() -> Settings:
     return Settings()
 
 APP_CONFIG = dict(
-    title="Nutrition Scanner API",
-    description="Backend API for Nutrino",
+    title="Nutrino",
+    description="""
+    API for scanning food products and analyzing nutrition.
+
+    Features:
+    - Barcode lookup
+    - PostgreSQL caching
+    - OpenFoodFacts integration
+    - WHO-based nutrition analysis
+    - Health insights & warnings
+
+    All nutrition values are based on **per 100g of product**.
+    """,
     version="1.0.0"
 )
