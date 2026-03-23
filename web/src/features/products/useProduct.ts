@@ -11,5 +11,6 @@ export const useProduct = (barcode: string) => {
     queryKey: ["product", barcode],
     queryFn: () => fetchProduct(barcode),
     enabled: !!barcode, 
+    retry: false,
   });
 };

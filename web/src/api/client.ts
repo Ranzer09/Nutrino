@@ -6,7 +6,7 @@ const API_KEY = import.meta.env.VITE_API_KEY;
 
 const api = axios.create({
   baseURL: directUrl, 
-  timeout: 20000,
+  timeout: 12000,
   headers: {
     Accept: 'application/json',
     'Content-Type': 'application/json',

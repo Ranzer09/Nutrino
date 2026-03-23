@@ -9,7 +9,7 @@ export const NutritionCard: React.FC<Props> = ({ analysis }) => {
   return (
     <div className="bg-white shadow rounded p-6 mt-4">
       <h2 className="text-lg font-semibold mb-4 text-center">
-        Percentage of daily limit (per 100g)
+        Contribution to daily limits  (per 100g)
       </h2>
         
       <div className="grid grid-cols-2 gap-6">

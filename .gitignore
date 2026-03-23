@@ -60,6 +60,7 @@ dist/
 dist-ssr/
 .vite/                
 *.local
+*.pem
 
 # Environment files 
 .env.local
