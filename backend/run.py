@@ -14,6 +14,8 @@ def start_server():
         port=settings.port,
         reload=not is_prod,
         workers=settings.workers if is_prod else 1,
+        ssl_keyfile="./192.168.0.106+2-key.pem", #Only for testing purpose
+        ssl_certfile="./192.168.0.106+2.pem",
     )
 
 

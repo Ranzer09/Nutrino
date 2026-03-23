@@ -41,7 +41,9 @@ def generate_nutrition_insights(analysis: dict) -> dict:
 
     if warnings:
         summary = "This product has some nutritional concerns"
-    else:
+    elif (salt['value'] and sugars['value'] and saturated_fat['value'] and fat['value']) == None:
+        summary = "Not enough information for summary"
+    else:   
         summary = "This product has generally good nutrition levels"
 
     return {
