@@ -10,16 +10,19 @@ export const BarcodeScanner: React.FC<Props> = ({ onScan }) => {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const hasScannedRef = useRef(false);
 
-  const [isRunning, setIsRunning] = useState(false);
+  const isRunningRef = useRef(false);
+  const [isRunningUI, setIsRunningUI] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const stopScanner = async () => {
     try {
-      if (scannerRef.current && isRunning) {
+      if (scannerRef.current && isRunningRef.current) {
         await scannerRef.current.stop();
         await scannerRef.current.clear();
+
         scannerRef.current = null;
-        setIsRunning(false);
+        isRunningRef.current = false;
+        setIsRunningUI(false);
       }
     } catch (err) {
       console.error("Stop error:", err);
@@ -48,22 +51,17 @@ export const BarcodeScanner: React.FC<Props> = ({ onScan }) => {
 
   const startScanner = async () => {
     try {
-      if (isRunning) return;
-      hasScannedRef.current = false;
       setLoading(true);
+      if (isRunningRef.current) return;
 
-      if (!navigator.mediaDevices?.getUserMedia) {
-        toast.error("Camera not supported in this browser");
-        return;
-      }
+      hasScannedRef.current = false;
 
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-
       stream.getTracks().forEach((track) => track.stop());
 
       const devices = await Html5Qrcode.getCameras();
 
-      if (!devices || devices.length === 0) {
+      if (!devices?.length) {
         toast.error("No camera devices found");
         return;
       }
@@ -75,54 +73,54 @@ export const BarcodeScanner: React.FC<Props> = ({ onScan }) => {
 
       const scanner = new Html5Qrcode("reader");
       scannerRef.current = scanner;
-
       await scanner.start(
         cameraId,
         { fps: 10, qrbox: 250 },
         (decodedText) => {
           if (hasScannedRef.current) return;
-
+          
           hasScannedRef.current = true;
 
-          toast.success("Barcode scanned");
-
+          toast.success(`Barcode scanned - ${decodedText}`);
+          
           onScan(decodedText);
-
+          
           stopScanner();
         },
-        () => {} // ignore scan errors
+        () => {}
       );
 
-      setIsRunning(true);
+      isRunningRef.current = true;   
+      setIsRunningUI(true);         
 
     } catch (err: any) {
-      console.error("Scanner error:", err);
-
       if (err.name === "NotAllowedError") {
         toast.error("Camera permission denied");
-      } else if (err.name === "NotFoundError") {
-        toast.error("No camera found");
       } else {
         toast.error("Failed to start scanner");
       }
     } finally {
-      setLoading(false);
-    }
+      setTimeout(() => {
+       setLoading(false);   
+    }, 1000);
+  }
   };
 
   return (
     <div className="mt-4">
 
       {/* BUTTON */}
-      {!isRunning ? (
+      {!isRunningUI ? (
         <button
+          disabled={loading}
           onClick={startScanner}
           className="bg-blue-500 text-white px-4 py-2 rounded w-full"
-        >
+          >
           {loading ? "Starting camera..." : "Start Camera"}
         </button>
       ) : (
         <button
+          disabled={loading}
           onClick={stopScanner}
           className="bg-red-500 text-white px-4 py-2 rounded w-full"
         >

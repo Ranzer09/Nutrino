@@ -7,6 +7,7 @@ import { BarcodeScanner } from "./my-components/BarcodeScanner";
 import { Input } from "../components/ui/input"
 import { toast } from "sonner"
 import { Button } from "../components/ui/button"
+import { X } from "lucide-react";
 
 
 function App() {
@@ -51,12 +52,26 @@ function App() {
 
         {/* INPUT AREA */}
         <div className="flex flex-col sm:flex-row gap-2 mb-4">
-          <Input
-            disabled={isLoading || pendingScan}
-            placeholder="Enter barcode"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-          />
+          <div className="relative w-full max-w-sm"> {/* 2. The 'frame' that holds everything */}
+            <Input
+              disabled={isLoading || pendingScan}
+              placeholder="Enter barcode"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              className="pr-10" // 3. Padding-right ensures text doesn't hide behind the X
+            />
+            
+            {/* 4. Only show the button if there is text and we aren't loading */}
+            {inputValue && !isLoading && (
+              <button
+                onClick={() => setInputValue("")} // 5. The 'Clear' action
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                type="button" // 6. Prevents the button from accidentally 'submitting' a form
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
 
           <Button disabled={isLoading || pendingScan || isCurrentProduct(data) } onClick={handleSearch}>
             Search
