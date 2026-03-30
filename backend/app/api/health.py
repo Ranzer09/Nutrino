@@ -1,14 +1,35 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
+from app.db.session import get_db  
+import time
 
 router = APIRouter()
 
-
 @router.get("/health")
-async def health_check():
+async def health_check(db: AsyncSession = Depends(get_db)):
     """
-    Simple endpoint to verify the API is running.
+    Comprehensive health check verifying DB connectivity.
     """
-    return {
-        "status": "ok",
-        "message": "Nutrition Scanner API is running"
+    start_time = time.time()
+    health_details = {
+        "status": "healthy",
+        "timestamp": time.time(),
+        "services": {
+            "database": "down",
+            "api": "up"
+        }
     }
+
+    try:
+        await db.execute(text("SELECT 1"))
+        health_details["services"]["database"] = "up"
+    except Exception as e:
+        health_details["status"] = "unhealthy"
+        raise HTTPException(
+            status_code=503, 
+            detail=health_details
+        )
+
+    health_details["latency_ms"] = round((time.time() - start_time) * 1000, 2)
+    return health_details

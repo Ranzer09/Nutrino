@@ -1,27 +1,30 @@
 from logging.config import fileConfig
+import os
+import sys
+from os.path import abspath, dirname
+
+# 1. CRITICAL: Add the path BEFORE importing your app modules
+# This points to the 'backend' folder
+sys.path.insert(0, abspath(dirname(dirname(__file__))))
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
-
 from alembic import context
+from app.db.session import DATABASE_URL 
 
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
+from app.db.base import Base
+print(f"DEBUG: Tables found in metadata: {Base.metadata.tables.keys()}")
+target_metadata = Base.metadata
+
+
+# 3. Standard Alembic setup
 config = context.config
 
-# Interpret the config file for Python logging.
-# This line sets up loggers basically.
+config.set_main_option("sqlalchemy.url", DATABASE_URL)
+
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# add your model's MetaData object here
-# for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
-from app.db.base import Base
-from app.models import product
-
-target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -47,6 +50,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        include_schemas=True,  # Add this if using custom schemas
     )
 
     with context.begin_transaction():

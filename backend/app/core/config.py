@@ -29,7 +29,8 @@ class Settings(BaseSettings):
     port: int = 8010
     host: str = "0.0.0.0"
     workers: int = 1
-
+    ANALYSIS_VERSION: int = 1
+    CACHE_DAYS:int = 5
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8"

@@ -1,44 +1,44 @@
 # Nutrition Analysis Logic
 
-## Standard
+## Overview
 
-All values are calculated **per 100g**.
+The system provides **dual calculations**:
+- **Per 100g** (standard reference)
+- **Per Serving** (real-world consumption)
 
----
-
-## WHO Daily Limits
-
-| Nutrient      | Limit |
-|---------------|-------|
-| Sugar         | 50g   |
-| Saturated Fat | 20g   |
-| Fat           | 70g   |
-| Salt          | 5g    |
+All analysis is based on **WHO dietary guidelines** and uses smart serving size parsing (e.g., "30 g", "250 ml", "1L").
 
 ---
 
-## Traffic Light System
+## Daily Recommended Limits (WHO-based)
 
-| Nutrient | Green | Amber  | Red    |
-|----------|-------|--------|--------|
-| Sugar    | ≤5g   |5–22.5g | >22.5g |
-| Fat      | ≤3g   |3–17.5g | >17.5g |
-| Sat Fat  | ≤1.5g |1.5–5g  | >5g    |
-| Salt     | ≤0.3g |0.3–1.5g| >1.5g  |
-
----
-
-## Percent Daily Calculation
-
-
-percent = (value / daily_limit) * 100
-
+| Nutrient          | Daily Limit |
+|-------------------|-------------|
+| Sugars            | 50g         |
+| Saturated Fat     | 20g         |
+| Total Fat         | 70g         |
+| Salt              | 5g          |
+| Protein           | 50g         |
+| Fiber             | 30g         |
+| Sodium            | 2g          |
+| Carbohydrates     | 260g        |
 
 ---
 
-## Example
+## Traffic Light System (Level Calculation)
 
-27g sugar: 27 / 50 = 54% → High sugar → Red
+The system uses **context-aware** coloring:
 
+### Negative Nutrients (lower is better)
+- **Green**: < 30% of daily limit
+- **Amber**: 30% – 70% of daily limit  
+- **Red**: > 70% of daily limit
+
+### Positive Nutrients (higher is better)
+- **Green**: ≥ 20% of daily needs per 100g
+- **Amber**: 10% – 20%
+- **Red**: < 10%
+
+**Note**: Protein and Fiber are treated as **positive** nutrients.
 
 ---

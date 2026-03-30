@@ -6,7 +6,7 @@ Create Date: ${create_date}
 
 """
 from typing import Sequence, Union
-from app.models import Base
+from app.db.base import Base
 
 from alembic import op
 import sqlalchemy as sa

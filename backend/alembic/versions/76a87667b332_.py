@@ -1,19 +1,20 @@
-"""create products table
+"""empty message
 
-Revision ID: 262e28c90bdc
-Revises: 
-Create Date: 2026-03-12 17:23:26.174395
+Revision ID: 76a87667b332
+Revises: 4f361527bba5
+Create Date: 2026-03-29 21:45:23.837344
 
 """
 from typing import Sequence, Union
+from app.db.base import Base
 
 from alembic import op
 import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '262e28c90bdc'
-down_revision: Union[str, Sequence[str], None] = None
+revision: str = '76a87667b332'
+down_revision: Union[str, Sequence[str], None] = '4f361527bba5'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -25,7 +26,8 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('barcode', sa.String(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('brand', sa.String(), nullable=False),
+    sa.Column('category', sa.String(), nullable=False),
+    sa.Column('brand', sa.String(), nullable=True),
     sa.Column('energy_kcal', sa.Float(), nullable=True),
     sa.Column('fat', sa.Float(), nullable=True),
     sa.Column('saturated_fat', sa.Float(), nullable=True),
@@ -33,8 +35,17 @@ def upgrade() -> None:
     sa.Column('salt', sa.Float(), nullable=True),
     sa.Column('protein', sa.Float(), nullable=True),
     sa.Column('fiber', sa.Float(), nullable=True),
+    sa.Column('sodium', sa.Float(), nullable=True),
+    sa.Column('carbs', sa.Float(), nullable=True),
+    sa.Column('serving_size', sa.String(), nullable=True),
+    sa.Column('serving_quantity', sa.Float(), nullable=True),
     sa.Column('image_url', sa.String(), nullable=True),
     sa.Column('nutriscore', sa.String(), nullable=True),
+    sa.Column('nutrition_analysis', sa.JSON(), nullable=True),
+    sa.Column('insights', sa.JSON(), nullable=True),
+    sa.Column('ingredients_text', sa.String(), nullable=True),
+    sa.Column('ingredient_analysis', sa.JSON(), nullable=True),
+    sa.Column('analysis_version', sa.Integer(), nullable=False),
     sa.Column('cached_at', sa.DateTime(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )

@@ -1,5 +1,8 @@
 from pydantic import BaseModel
 from datetime import datetime
+from typing import Optional, Dict
+
+from app.schemas.nutrition_schema import NutritionAnalysisResponse, IngredientAnalysis
 
 
 class ProductResponse(BaseModel):
@@ -9,20 +12,21 @@ class ProductResponse(BaseModel):
 
     id: int
     barcode: str
-    name: str | None
-    brand: str | None
-    image_url: str | None
-    nutriscore: str | None
+    name: Optional[str]
+    brand: Optional[str]
+    category: Optional[str]
+    image_url: Optional[str]
+    nutriscore: Optional[str]
 
-    energy_kcal: float | None
-    fat: float | None
-    saturated_fat: float | None
-    sugars: float | None
-    salt: float | None
-    protein: float | None
-    fiber: float | None
+    energy_kcal: Optional[float]
+    fat: Optional[float]
+    saturated_fat: Optional[float]
+    sugars: Optional[float]
+    salt: Optional[float]
+    protein: Optional[float]
+    fiber: Optional[float]
 
     cached_at: datetime
 
-    class ConfigDict:
+    class Config:
         from_attributes = True
