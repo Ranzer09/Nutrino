@@ -2,12 +2,12 @@ FROM node:20-alpine@sha256:f598378b5240225e6beab68fa9f356db1fb8efe55173e6d4d8153
 
 WORKDIR /app
 
-COPY web/package*.json ./
+COPY package*.json ./
 
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --frozen-lockfile
 
-COPY web/ ./
+COPY . ./
 
 RUN npm run build
 
