@@ -26,10 +26,7 @@ def needs_refresh(product: Product) -> bool:
     )
 
     if product.nutrition_analysis and isinstance(product.nutrition_analysis, dict):
-        serving_qty = product.nutrition_analysis.get("serving_quantity")
-        if serving_qty is None and product.serving_size: 
-            missing_analysis = True
+            if product.nutrition_analysis.get("serving_quantity") is None and product.serving_size:
+                missing_analysis = True
 
-    should_refresh = is_expired or version_mismatch or missing_analysis
-
-    return should_refresh
+    return is_expired or version_mismatch or missing_analysis
