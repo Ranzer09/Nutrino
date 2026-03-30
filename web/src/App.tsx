@@ -1,14 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useProduct } from "./features/products/useProduct";
-import { useEffect } from "react";
 import { NutritionCard } from "./my-components/nutrition/NutritionCard";
 import { InsightsCard } from "./my-components/nutrition/InsightsCard";
 import { BarcodeScanner } from "./my-components/BarcodeScanner";
-import { Input } from "../components/ui/input"
-import { toast } from "sonner"
-import { Button } from "../components/ui/button"
-import { X } from "lucide-react";
-
+import { Input } from "../components/ui/input";
+import { Button } from "../components/ui/button";
+import { X, Scan, Search, Camera } from "lucide-react";
+import { toast } from "sonner";
 
 function App() {
   const [inputValue, setInputValue] = useState("");
@@ -21,211 +19,197 @@ function App() {
 
   const handleSearch = () => {
     const trimmed = inputValue.trim();
-
     if (!trimmed) {
-      toast.error("Barcode cannot be empty");
+      toast.error("Please enter a barcode");
       return;
     }
-
-    if (!isValidBarcode(trimmed)) {
+    if (!/^\d+$/.test(trimmed)) {
       toast.error("Barcode must contain only numbers");
       return;
     }
-
     setBarcode(trimmed);
   };
-  
-  type ApiError = Error;
 
   const isValidBarcode = (code: string) => /^\d+$/.test(code);
 
-  const isCurrentProduct = (data: any, input: string) => {
-    return input === data?.product?.barcode;
-  };
-
   const getScoreBadgeClass = (score: string): string => {
     const classes: Record<string, string> = {
-      A: 'text-green-700',
-      B: 'text-green-500',
-      C: 'text-yellow-400',
-      D: 'text-orange-500',
-      E: 'text-red-600',
+      A: "bg-emerald-100 text-emerald-700",
+      B: "bg-green-100 text-green-700",
+      C: "bg-yellow-100 text-yellow-700",
+      D: "bg-orange-100 text-orange-700",
+      E: "bg-red-100 text-red-700",
     };
-
-    return classes[score.toUpperCase()] ?? 'text-gray-200 text-gray-500';
-  };
-  
-  const handleKeyDown = (e:any) => {
-    if (e.key === 'Enter') {
-      e.preventDefault(); 
-      
-      handleSearch(); 
-    }
+    return classes[score.toUpperCase()] || "bg-gray-100 text-gray-600";
   };
 
+  // Clear input when scanner is closed
   useEffect(() => {
-    if (error) {
-      toast.error(error.message);
-    }
-  }, [error]);
-
-  useEffect(() => {
-    if (!showScanner) {
-      setScanLoading(false);
+    if (!showScanner && pendingScan) {
+      setPendingScan(false);
     }
   }, [showScanner]);
 
-  const catchError = (apiError:ApiError) =>{
-    if (apiError.message.includes('timeout'))
-      return'Request Timed Out. Try again in a while'
-    else
-      return apiError.message
-  }
+  useEffect(() => {
+    if (error) {
+      toast.error(error.message || "Failed to fetch product");
+    }
+  }, [error]);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-slate-100">
+      <div className="max-w-4xl mx-auto px-4 py-8">
 
-        <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-center">
-          Nutrino
-        </h1>
-
-        {/* INPUT AREA */}
-      <div className="flex flex-col sm:flex-row gap-2 w-full max-w-lg mx-auto">    
-        <div className=" relative w-full">
-          <Input
-            disabled={isLoading || pendingScan}
-            placeholder="Enter barcode"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="pr-10 w-full" 
-          />
-          
-          {inputValue && !isLoading && (
-            <button
-              onClick={() => setInputValue("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-              type="button" 
-              aria-label="Clear input"
-            >
-              <X size={16} />
-            </button>
-          )}
-      </div>
-
-          <Button disabled={isLoading || pendingScan || isCurrentProduct(data,inputValue) } onClick={handleSearch}>
-            Search
-          </Button>
-
-          <Button
-              disabled={isLoading || scanLoading}
-              variant="secondary"
-              onClick={() => {
-                setShowScanner((prev) => {
-                  const next = !prev;
-
-                  if (next) {
-                    setPendingScan(true); // hide product
-                  } else {
-                    setPendingScan(false); // restore product
-                  }
-
-                  return next;
-                });
-              }}
-            >
-              {showScanner ? "Close Scanner" : "Scan Barcode"}
-          </Button>
+        {/* Header */}
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center">
+              <span className="text-white text-2xl">🥗</span>
+            </div>
+            <h1 className="text-4xl font-bold tracking-tight text-gray-900">Nutrino</h1>
+          </div>
+          <p className="text-gray-600 text-lg">Scan • Understand • Eat Better</p>
         </div>
 
-        {/* SCANNER */}
-        {showScanner && (
-          <BarcodeScanner
-            onScan={(code) => {
-              if (!isValidBarcode(code)) {
-                toast.error("Invalid barcode scanned");
-                return;
-              }
+        {/* Search Input Section */}
+      <div className="max-w-xl mx-auto mb-12 bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+        {/* Input on top - full width */}
+          <div className="relative mb-4">
+            <Input
+              placeholder="Enter barcode number..."
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              className={`${isLoading || scanLoading ? "opacity-50 pointer-events-none" : "opacity-100"}h-14 text-lg pl-6 pr-12 rounded-2xl border-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500`}
+              disabled={(isLoading || scanLoading) }
+            />
+            
+            {inputValue && (
+              <button
+                onClick={() => setInputValue("")}
+                className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                aria-label="Clear input"
+              >
+                <X size={20} />
+              </button>
+            )}
+          </div>
 
-              setInputValue(code);
-              setBarcode(code);
-              setShowScanner(false);
-              setPendingScan(false);
-            }}
-            scanLoading={scanLoading} 
-            setScanLoading={setScanLoading}
-          />
+          <div className="flex gap-3">
+            <Button 
+              onClick={handleSearch}
+              disabled={(isLoading || scanLoading)  || !inputValue.trim()}
+              className={`${isLoading || scanLoading ? "opacity-50 pointer-events-none" : "opacity-100"} flex-1 h-14 rounded-2xl font-semibold bg-indigo-600 hover:bg-indigo-700`}
+            >
+              <Search className="mr-2" size={20} />
+              Search Barcode
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() => setShowScanner(!showScanner)}
+              disabled={(isLoading || scanLoading) }
+              className={`${isLoading || scanLoading ? "opacity-50 pointer-events-none" : "opacity-100"}h-14 px-8 rounded-2xl border-2 border-gray-300 hover:bg-gray-50 flex items-center gap-2`}
+            >
+              <Camera size={20} />
+              <span className="hidden sm:inline">Scan</span>
+            </Button>
+          </div>
+        </div>
+
+        {/* Scanner */}
+        {showScanner && (
+          <div className="max-w-2xl mx-auto mb-12">
+            <BarcodeScanner
+              onScan={(code) => {
+                if (!isValidBarcode(code)) {
+                  toast.error("Invalid barcode");
+                  return;
+                }
+                setInputValue(code);
+                setBarcode(code);
+                setShowScanner(false);
+              }}
+              scanLoading={scanLoading}
+              setScanLoading={setScanLoading}
+            />
+          </div>
         )}
 
         {/* Loading */}
         {isLoading && (
-          <div className="text-center mt-4">
-            <p className="animate-pulse">Fetching product...</p>
+          <div className="text-center py-12">
+            <div className="animate-spin w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full mx-auto mb-4" />
+            <p className="text-gray-600">Fetching product information...</p>
           </div>
         )}
-        
-        {error && (
-          <div className="mt-6 mx-auto max-w-md p-4 rounded-xl border border-red-100 bg-red-50/50 backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-300">
-            <div className="flex items-center gap-3 justify-center text-red-600">
-              <p className="text-sm font-medium">
-              Error: <span className="font-normal opacity-90">{catchError(error)}.</span>  
-              </p>
-            </div>
+
+        {/* Error */}
+        {error && !isLoading && (
+          <div className="max-w-md mx-auto bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
+            <p className="text-red-600 font-medium">Failed to load product</p>
+            <p className="text-sm text-red-500 mt-1">{error.message}</p>
           </div>
         )}
-        {/* DATA */}
-        {data && !pendingScan && (
-          <>
-            <div className="bg-white rounded-xl shadow p-4 flex gap-4 items-center mt-4">
-              <img
-                src={data?.product?.image_url || './assets/placeholder.png'}
-                alt="product"
-                className="w-20 h-20 object-cover rounded"
-              />
 
-              <div className="flex-1">
-                <h2 className="font-semibold">{data?.product?.name}</h2>
-                <p className="text-sm text-gray-500">{data?.product?.brand}</p>
-              </div>
-
-              <div className="flex items-center gap-2">
-
-                <span className="hidden md:inline-block font-medium text-gray-600">
-                  Nutriscore:
-                </span>
-
-                {data?.product?.nutriscore ? (
-                  <p className={`px-3 py-1 rounded-md text-lg font-bold transition-colors ${getScoreBadgeClass(data.product.nutriscore)}`}>
-                    {data.product.nutriscore.toUpperCase()}
-                  </p>
-                ) : (
-                  <span className="text-gray-400 italic text-sm">N/A</span>
+        {/* Product Display */}
+        {data && !pendingScan && !isLoading && (
+          <div className="space-y-8">
+            {/* Product Header */}
+            <div className="bg-white rounded-3xl shadow p-6 flex flex-col sm:flex-row gap-6 items-start">
+              {data.product.image_url && (
+                <img
+                  src={data.product.image_url}
+                  alt={data.product.name}
+                  className="w-28 h-28 object-cover rounded-2xl shadow-sm"
+                />
+              )}
+              <div className="flex-1 min-w-0">
+                <h2 className="font-semibold text-2xl leading-tight">{data.product.name}</h2>
+                <p className="text-gray-600 mt-1">{data.product.brand}</p>
+                {data.product.category && (
+                  <p className="text-xs text-gray-500 mt-2 uppercase tracking-widest">{data.product.category}</p>
                 )}
               </div>
+
+              {data.product.nutriscore && (
+                <div className={`px-6 py-3 rounded-2xl text-4xl font-black self-start ${getScoreBadgeClass(data.product.nutriscore)}`}>
+                  {data.product.nutriscore.toUpperCase()}
+                </div>
+              )}
             </div>
 
+            {/* Insights */}
             <InsightsCard 
               insights={data.insights} 
               ingredient_analysis={data.ingredient_analysis} 
-            />           
+            />
+
+            {/* Nutrition */}
             <NutritionCard 
               analysis={data.analysis} 
               energy={data.energy}
             />
 
-           <p className="text-xs text-gray-500 text-center mt-3">
-            Values based on WHO guidelines • Per serving shown when available
-           </p>
-          </>
+            <p className="text-center text-xs text-gray-500 pt-4">
+              Data from OpenFoodFacts • Analysis based on WHO guidelines
+            </p>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!data && !isLoading && !error && !showScanner && (
+          <div className="text-center py-20">
+            <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+              <Scan size={32} className="text-gray-400" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-700">Ready to scan?</h3>
+            <p className="text-gray-500 mt-2 max-w-xs mx-auto">
+              Enter a barcode or use the camera to get instant nutrition insights
+            </p>
+          </div>
         )}
       </div>
-      {!data && !isLoading && !error && (
-        <div className="text-center text-gray-500 mt-5">
-          <p className="text-lg">Scan a product to begin</p>
-          <p className="text-sm">Get instant nutrition insights</p>
-        </div>
-      )}
     </div>
   );
 }

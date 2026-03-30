@@ -45,7 +45,7 @@ export const NutritionCard: React.FC<Props> = ({ analysis, energy }) => {
           return (
             <CircularProgress
                 label={labelMap[key] || key}
-                value={nutrient?.value}
+                value={nutrient?.value != null ? parseFloat(Number(nutrient.value).toFixed(2)) : null}
                 percent={nutrient?.percent_daily}
                 limit={nutrient?.limit}
                 level={nutrient?.level}                    
@@ -71,7 +71,7 @@ export const NutritionCard: React.FC<Props> = ({ analysis, energy }) => {
         <div className="flex flex-col sm:flex-row gap-8 sm:items-end">
           <div>
             <div className="text-6xl font-black tracking-tighter">
-              {energy.per_serving ?? "—"}
+              {energy?.per_serving != null ? parseFloat(Number(energy.per_serving).toFixed(2)) : '—'}
             </div>
             <p className="text-indigo-400 text-sm font-medium">kcal per serving</p>
           </div>
@@ -80,7 +80,7 @@ export const NutritionCard: React.FC<Props> = ({ analysis, energy }) => {
 
           <div className="opacity-75">
             <div className="text-4xl font-semibold">
-              {energy.per_100g ?? "—"}
+              {energy?.per_100g != null ? parseFloat(Number(energy.per_100g).toFixed(2)) : '—'}
             </div>
             <p className="text-xs text-slate-400">kcal per 100g</p>
           </div>

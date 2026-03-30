@@ -86,7 +86,7 @@ export const BarcodeScanner: React.FC<Props> = ({
       // Prefer back camera
       const cameraId =
         devices.find((d) => d.label.toLowerCase().includes("back") || 
-                           d.label.toLowerCase().includes("rear"))?.id ||
+        d.label.toLowerCase().includes("rear"))?.id ||
         devices[0].id;
 
       const scanner = new Html5Qrcode("reader", { 
@@ -145,7 +145,9 @@ export const BarcodeScanner: React.FC<Props> = ({
 
       // Fallback: offer image upload in future (we can add later)
     } finally {
-      setTimeout(() => setScanLoading(false), 400);
+      setTimeout(() => {
+        setScanLoading(false);
+      }, 600);
     }
   };
 
