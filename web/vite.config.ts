@@ -11,7 +11,17 @@ export default defineConfig({
     },
   },
   server: {
-    https: true,
-    host: true,
+    https: {},
+    host: true, 
+    port: 5173,
+    strictPort: true,
   },
-})
+
+  // Pre-bundling optimizations
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'lucide-react'],
+  },
+
+  logLevel: 'info',
+}
+)

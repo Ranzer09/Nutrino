@@ -1,138 +1,181 @@
-import { useEffect, useRef, useState } from "react";
-import { Html5Qrcode } from "html5-qrcode";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 import { toast } from "sonner";
 
 type Props = {
   onScan: (code: string) => void;
+  scanLoading: boolean;
+  setScanLoading: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-export const BarcodeScanner: React.FC<Props> = ({ onScan }) => {
+export const BarcodeScanner: React.FC<Props> = ({
+  onScan,
+  scanLoading,
+  setScanLoading,
+}) => {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const hasScannedRef = useRef(false);
-
   const isRunningRef = useRef(false);
+
   const [isRunningUI, setIsRunningUI] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const stopScanner = async () => {
-    try {
-      if (scannerRef.current && isRunningRef.current) {
-        await scannerRef.current.stop();
-        await scannerRef.current.clear();
-
-        scannerRef.current = null;
-        isRunningRef.current = false;
-        setIsRunningUI(false);
-      }
-    } catch (err) {
-      console.error("Stop error:", err);
+  const stopScanner = useCallback(async () => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true }).catch(() => null);
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
     }
-  };
 
+    if (scannerRef.current) {
+      if (isRunningRef.current) {
+        await scannerRef.current.stop();
+      }
+      await scannerRef.current.clear();
+      scannerRef.current = null;
+    }
+  } catch (err) {
+    console.warn("Scanner cleanup warning:", err);
+  } finally {
+    isRunningRef.current = false;
+    setIsRunningUI(false);
+    setScanLoading(false); 
+  }
+}, [setScanLoading]);
+
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       stopScanner();
     };
-  }, []);
+  }, [stopScanner]);
 
+  // Handle tab/background visibility
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.hidden) {
+      if (document.hidden && isRunningRef.current) {
         stopScanner();
       }
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, []);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [stopScanner]);
 
   const startScanner = async () => {
     try {
-      setLoading(true);
       if (isRunningRef.current) return;
 
+      setScanLoading(true);
+      setErrorMessage(null);
       hasScannedRef.current = false;
+      isRunningRef.current = true;
+      await navigator.mediaDevices.getUserMedia({ video: true });
 
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      stream.getTracks().forEach((track) => track.stop());
-
-      const devices = await Html5Qrcode.getCameras();
-
-      if (!devices?.length) {
-        toast.error("No camera devices found");
-        return;
+      // HTTPS check (critical for camera)
+      if (location.protocol !== "https:" && location.hostname !== "localhost") {
+        throw new Error("Camera access requires a secure (HTTPS) connection");
       }
 
-      const cameraId =
-        devices.find((d) =>
-          d.label.toLowerCase().includes("back")
-        )?.id || devices[0].id;
+      // Get available cameras
+      const devices = await Html5Qrcode.getCameras();
+      if (!devices?.length) {
+        throw new Error("No camera found on this device");
+      }
 
-      const scanner = new Html5Qrcode("reader");
+      // Prefer back camera
+      const cameraId =
+        devices.find((d) => d.label.toLowerCase().includes("back") || 
+                           d.label.toLowerCase().includes("rear"))?.id ||
+        devices[0].id;
+
+      const scanner = new Html5Qrcode("reader", { 
+        verbose: false,           // reduce console spam
+        formatsToSupport: [       // Explicitly support barcodes + QR
+          Html5QrcodeSupportedFormats.CODE_128,
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.QR_CODE,
+        ]
+      });
+
       scannerRef.current = scanner;
+
       await scanner.start(
         cameraId,
-        { fps: 10, qrbox: 250 },
-        (decodedText) => {
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },   // tighter box for barcodes
+          aspectRatio: 1.0,
+        },
+        (decodedText: string) => {
           if (hasScannedRef.current) return;
-          
           hasScannedRef.current = true;
 
-          toast.success(`Barcode scanned - ${decodedText}`);
-          
-          onScan(decodedText);
-          
+          toast.success("Barcode scanned successfully!");
+          onScan(decodedText.trim());
           stopScanner();
         },
-        () => {}
+        (error) => {
+          console.error(error)
+          setScanLoading(false);
+        }
       );
 
-      isRunningRef.current = true;   
-      setIsRunningUI(true);         
-
+      setIsRunningUI(true);
     } catch (err: any) {
-      if (err.name === "NotAllowedError") {
-        toast.error("Camera permission denied");
-      } else {
-        toast.error("Failed to start scanner");
+      console.error("Scanner start error:", err);
+
+      let userMessage = "Failed to start camera scanner";
+
+      if (err.name === "NotAllowedError" || err.message.includes("Permission")) {
+        userMessage = "Camera permission denied. Please allow camera access in your browser settings.";
+      } else if (err.name === "NotFoundError" || err.message.includes("No camera")) {
+        userMessage = "No camera detected on this device.";
+      } else if (err.name === "NotReadableError") {
+        userMessage = "Camera is being used by another app or tab. Close other apps and try again.";
+      } else if (err.message.includes("HTTPS")) {
+        userMessage = err.message;
+      } else if (err.message.includes("iOS") || err.message.includes("Safari")) {
+        userMessage = "iOS/Safari camera issues are common. Try refreshing or using Chrome on iOS.";
       }
+
+      setErrorMessage(userMessage);
+      toast.error(userMessage);
+
+      // Fallback: offer image upload in future (we can add later)
     } finally {
-      setTimeout(() => {
-       setLoading(false);   
-    }, 1000);
-  }
+      setTimeout(() => setScanLoading(false), 400);
+    }
   };
 
   return (
-    <div className="mt-4">
-
-      {/* BUTTON */}
+    <div className="mt-4 w-full">
       {!isRunningUI ? (
         <button
-          disabled={loading}
+          disabled={scanLoading}
           onClick={startScanner}
-          className="bg-blue-500 text-white px-4 py-2 rounded w-full"
-          >
-          {loading ? "Starting camera..." : "Start Camera"}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl w-full font-medium transition-colors disabled:opacity-70"
+        >
+          {scanLoading ? "Starting camera..." : "Start Camera Scanner"}
         </button>
       ) : (
         <button
-          disabled={loading}
           onClick={stopScanner}
-          className="bg-red-500 text-white px-4 py-2 rounded w-full"
+          disabled={scanLoading}
+          className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl w-full font-medium transition-colors"
         >
-          Stop Camera
+          Stop Scanner
         </button>
       )}
 
-      {/* SCANNER VIEW */}
-      <div
-        id="reader"
-        className="w-full mt-4 rounded overflow-hidden"
-      />
+      {errorMessage && (
+        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+          {errorMessage}
+        </div>
+      )}
+
+      <div id="reader" className="w-full aspect-video rounded-2xl bg-black mt-4 overflow-hidden" />
     </div>
   );
 };

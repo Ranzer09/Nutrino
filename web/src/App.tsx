@@ -15,32 +15,72 @@ function App() {
   const [barcode, setBarcode] = useState("");
   const [showScanner, setShowScanner] = useState(false);
   const [pendingScan, setPendingScan] = useState(false);
+  const [scanLoading, setScanLoading] = useState(false);
 
   const { data, isLoading, error } = useProduct(barcode);
-  
+
   const handleSearch = () => {
-    if (!inputValue.trim()) {
+    const trimmed = inputValue.trim();
+
+    if (!trimmed) {
       toast.error("Barcode cannot be empty");
       return;
     }
 
-    if (!/^\d+$/.test(inputValue)) {
+    if (!isValidBarcode(trimmed)) {
       toast.error("Barcode must contain only numbers");
       return;
     }
 
-    setBarcode(inputValue);
+    setBarcode(trimmed);
   };
   
-  const isCurrentProduct = (data:any) =>{
-    return inputValue === data?.product?.barcode
-  }
+  type ApiError = Error;
+
+  const isValidBarcode = (code: string) => /^\d+$/.test(code);
+
+  const isCurrentProduct = (data: any, input: string) => {
+    return input === data?.product?.barcode;
+  };
+
+  const getScoreBadgeClass = (score: string): string => {
+    const classes: Record<string, string> = {
+      A: 'text-green-700',
+      B: 'text-green-500',
+      C: 'text-yellow-400',
+      D: 'text-orange-500',
+      E: 'text-red-600',
+    };
+
+    return classes[score.toUpperCase()] ?? 'text-gray-200 text-gray-500';
+  };
+  
+  const handleKeyDown = (e:any) => {
+    if (e.key === 'Enter') {
+      e.preventDefault(); 
+      
+      handleSearch(); 
+    }
+  };
 
   useEffect(() => {
     if (error) {
-      toast.error((error as Error).message || "Failed to fetch product");
+      toast.error(error.message);
     }
   }, [error]);
+
+  useEffect(() => {
+    if (!showScanner) {
+      setScanLoading(false);
+    }
+  }, [showScanner]);
+
+  const catchError = (apiError:ApiError) =>{
+    if (apiError.message.includes('timeout'))
+      return'Request Timed Out. Try again in a while'
+    else
+      return apiError.message
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
@@ -51,34 +91,35 @@ function App() {
         </h1>
 
         {/* INPUT AREA */}
-        <div className="flex flex-col sm:flex-row gap-2 mb-4">
-          <div className="relative w-full max-w-sm"> {/* 2. The 'frame' that holds everything */}
-            <Input
-              disabled={isLoading || pendingScan}
-              placeholder="Enter barcode"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              className="pr-10" // 3. Padding-right ensures text doesn't hide behind the X
-            />
-            
-            {/* 4. Only show the button if there is text and we aren't loading */}
-            {inputValue && !isLoading && (
-              <button
-                onClick={() => setInputValue("")} // 5. The 'Clear' action
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                type="button" // 6. Prevents the button from accidentally 'submitting' a form
-              >
-                <X size={16} />
-              </button>
-            )}
-          </div>
+      <div className="flex flex-col sm:flex-row gap-2 w-full max-w-lg mx-auto">    
+        <div className=" relative w-full">
+          <Input
+            disabled={isLoading || pendingScan}
+            placeholder="Enter barcode"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="pr-10 w-full" 
+          />
+          
+          {inputValue && !isLoading && (
+            <button
+              onClick={() => setInputValue("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              type="button" 
+              aria-label="Clear input"
+            >
+              <X size={16} />
+            </button>
+          )}
+      </div>
 
-          <Button disabled={isLoading || pendingScan || isCurrentProduct(data) } onClick={handleSearch}>
+          <Button disabled={isLoading || pendingScan || isCurrentProduct(data,inputValue) } onClick={handleSearch}>
             Search
           </Button>
 
           <Button
-              disabled={isLoading}
+              disabled={isLoading || scanLoading}
               variant="secondary"
               onClick={() => {
                 setShowScanner((prev) => {
@@ -102,14 +143,18 @@ function App() {
         {showScanner && (
           <BarcodeScanner
             onScan={(code) => {
-              if (!/^\d+$/.test(code)) {
+              if (!isValidBarcode(code)) {
                 toast.error("Invalid barcode scanned");
                 return;
               }
+
               setInputValue(code);
+              setBarcode(code);
               setShowScanner(false);
-              setPendingScan(false); 
+              setPendingScan(false);
             }}
+            scanLoading={scanLoading} 
+            setScanLoading={setScanLoading}
           />
         )}
 
@@ -124,32 +169,62 @@ function App() {
           <div className="mt-6 mx-auto max-w-md p-4 rounded-xl border border-red-100 bg-red-50/50 backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-300">
             <div className="flex items-center gap-3 justify-center text-red-600">
               <p className="text-sm font-medium">
-                Error: <span className="font-normal opacity-90">{error.message}. Please try another Barcode</span>
+              Error: <span className="font-normal opacity-90">{catchError(error)}.</span>  
               </p>
             </div>
           </div>
         )}
-
         {/* DATA */}
         {data && !pendingScan && (
           <>
-            <h2 className="text-lg sm:text-xl font-semibold text-center mt-4">
-              {data.product.name} (Barcode:{data.product.barcode})
-            </h2>
+            <div className="bg-white rounded-xl shadow p-4 flex gap-4 items-center mt-4">
+              <img
+                src={data?.product?.image_url || './assets/placeholder.png'}
+                alt="product"
+                className="w-20 h-20 object-cover rounded"
+              />
 
-            <NutritionCard analysis={data.analysis} />
-            <InsightsCard insights={data.insights} />
+              <div className="flex-1">
+                <h2 className="font-semibold">{data?.product?.name}</h2>
+                <p className="text-sm text-gray-500">{data?.product?.brand}</p>
+              </div>
 
-            <p className="text-xs text-gray-500 text-center mt-3">
-              All values are based on per 100g of product
-            </p>
+              <div className="flex items-center gap-2">
+
+                <span className="hidden md:inline-block font-medium text-gray-600">
+                  Nutriscore:
+                </span>
+
+                {data?.product?.nutriscore ? (
+                  <p className={`px-3 py-1 rounded-md text-lg font-bold transition-colors ${getScoreBadgeClass(data.product.nutriscore)}`}>
+                    {data.product.nutriscore.toUpperCase()}
+                  </p>
+                ) : (
+                  <span className="text-gray-400 italic text-sm">N/A</span>
+                )}
+              </div>
+            </div>
+
+            <InsightsCard 
+              insights={data.insights} 
+              ingredient_analysis={data.ingredient_analysis} 
+            />           
+            <NutritionCard 
+              analysis={data.analysis} 
+              energy={data.energy}
+            />
+
+           <p className="text-xs text-gray-500 text-center mt-3">
+            Values based on WHO guidelines • Per serving shown when available
+           </p>
           </>
         )}
       </div>
       {!data && !isLoading && !error && (
-        <p className="text-center text-gray-500 mt-4">
-          Enter or scan a barcode to see nutrition details
-        </p>
+        <div className="text-center text-gray-500 mt-5">
+          <p className="text-lg">Scan a product to begin</p>
+          <p className="text-sm">Get instant nutrition insights</p>
+        </div>
       )}
     </div>
   );

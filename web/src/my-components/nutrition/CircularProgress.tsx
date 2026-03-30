@@ -4,68 +4,68 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "../../../components/ui/dialog"
+} from "../../../components/ui/dialog";
 
 type Props = {
   label: string;
   value: number | null;
   percent: number | null;
-  level: "green" | "amber" | "red" | "unknown";
+  limit: number | null;
+  level: "red" | "green" | "amber";
+  isServing?: boolean;
 };
 
-const getLimit = (nutrient: string) => {
-  switch (nutrient) {
-    case "Fat":
-      return "70g";
-    case "Sat Fat":
-      return "20g";
-    case "Sugar":
-      return "50g";
-    case "Salt":
-      return "5g";
-    default:
-      return "Unknown";
-  }
-};
+const getNutrientStatus = (status: "green" | "amber" | "red", type: string) => {
+  const normalizedType = type.toLowerCase();
+  const isPositive = ["protein", "fiber"].includes(normalizedType);
 
-const getColor = (level: string) => {
-  switch (level) {
-    case "green":
-      return "#22c55e";
-    case "amber":
-      return "#facc15";
-    case "red":
-      return "#ef4444";
-    default:
-      return "#9ca3af";
-  }
+  const config = {
+    green: {
+      color: "#22c55e",
+      labelText: isPositive ? "Excellent" : "Low",
+    },
+    amber: {
+      color: "#f59e0b",
+      labelText: "Moderate",
+    },
+    red: {
+      color: "#ef4444",
+      labelText: isPositive ? "Low" : "High",
+    },
+  };
+
+  return config[status] ?? { color: "#9ca3af", labelText: "Unknown" };
 };
 
 export const CircularProgress: React.FC<Props> = ({
   label,
   value,
   percent,
+  limit,
   level,
+  isServing = false,
 }) => {
   const [open, setOpen] = React.useState(false);
 
-  const radius = 40;
-  const stroke = 8;
+  const radius = 48;
+  const stroke = 9;
   const normalizedRadius = radius - stroke * 2;
   const circumference = normalizedRadius * 2 * Math.PI;
-
   const progress = percent ?? 0;
-  const strokeDashoffset =
-    circumference - (progress / 100) * circumference;
+  const strokeDashoffset = circumference - (progress / 100) * circumference;
+
+  const {color, labelText} = getNutrientStatus(level, label);
 
   return (
     <>
-      {/* CLICKABLE CIRCLE */}
-      <div
-        
-        className="flex flex-col items-center"
-      >
-        <svg onClick={() => setOpen(true)} className="cursor-pointer" height={radius * 2} width={radius * 2}>
+      <div className="flex flex-col items-center group">
+        <svg
+          onClick={() => setOpen(true)}
+          className="cursor-pointer transition-transform group-hover:scale-105"
+          height={radius * 2}
+          width={radius * 2}
+        >
+          {/* Background */}
           <circle
             stroke="#e5e7eb"
             fill="transparent"
@@ -75,8 +75,9 @@ export const CircularProgress: React.FC<Props> = ({
             cy={radius}
           />
 
+          {/* Progress Circle */}
           <circle
-            stroke={getColor(level)}
+            stroke={color}
             fill="transparent"
             strokeWidth={stroke}
             strokeDasharray={circumference}
@@ -88,50 +89,86 @@ export const CircularProgress: React.FC<Props> = ({
             transform={`rotate(-90 ${radius} ${radius})`}
           />
 
+          {/* Center Text - Make percentage prominent */}
           <text
             x="50%"
-            y="50%"
+            y="46%"
             dominantBaseline="middle"
             textAnchor="middle"
-            className="text-sm font-semibold"
+            className="text-lg font-bold fill-current"
           >
-            {progress}%
+            {progress > 0 ? `${Math.round(progress)}%` : "—"}
+          </text>
+          <text
+            x="50%"
+            y="62%"
+            dominantBaseline="middle"
+            textAnchor="middle"
+            className="text-[10px] fill-gray-500"
+          >
+            of daily
           </text>
         </svg>
 
-        <p className="text-sm mt-2">{label}</p>
-        <p className="text-xs text-gray-500">
-          {value ?? "N/A"}g
-        </p>
+        <div className="text-center mt-3">
+          <p className="font-semibold text-sm">{label}</p>
+          <p className="text-xs text-gray-500 mt-0.5">
+            {value !== null ? `${value}g` : "—"}
+          </p>
+        </div>
       </div>
 
-      {/* POPUP DIALOG */}
+      {/* Enhanced Dialog - Much clearer daily impact */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{label} Details (per 100g)</DialogTitle>
+            <DialogTitle className="text-xl">
+              {label} • {isServing ? "Per Serving" : "Per 100g"}
+            </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-2 text-sm">
-            <p>
-              Value: <strong>{value ?? "N/A"}g</strong>
-            </p>
+          <div className="space-y-5 py-2">
+            {/* Daily Contribution - Most Important */}
+            <div className="bg-gray-50 p-5 rounded-2xl border">
+              <p className="text-sm text-gray-600 mb-1">Contribution to Daily Limit</p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-5xl font-bold" style={{ color }}>
+                  {progress > 0 ? Math.round(progress) : "—"}
+                </span>
+                <span className="text-3xl text-gray-400">%</span>
+              </div>
+              <p className="text-sm text-gray-500 mt-1">
+                of recommended daily {label.toLowerCase()}
+              </p>
+            </div>
 
-            <p>
-              Contribution to Daily Limit: <strong>{percent ?? 0}%</strong>
-            </p>
-            
-            <p>
-             Daily Limit: <strong>{getLimit(label)}</strong>
-            </p>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-gray-500">Amount</p>
+                <p className="font-semibold">{value !== null ? `${value}g` : "—"}</p>
+              </div>
+              <div>
+                <p className="text-gray-500">Daily Limit</p>
+                <p className="font-semibold">{limit ? `${limit}g` : "—"}</p>
+              </div>
+            </div>
 
-            <p>
-              Level: <strong>{level}</strong>
-            </p>
+            <div>
+              <p className="text-gray-500 text-sm mb-1">Assessment</p>
+              <span 
+                className="inline-block px-4 py-1.5 rounded-full text-sm font-medium"
+                style={{ 
+                  backgroundColor: color + "20", 
+                  color: color 
+                }}
+              >
+                {labelText}
+              </span>
+            </div>
 
-            <p className="text-gray-500 text-xs">
-              Based on WHO recommended daily limits (per 100g).
-            </p>
+            <div className="text-xs text-gray-500 pt-4 border-t">
+              Based on WHO dietary guidelines • {isServing ? "Per serving" : "Per 100g"} values
+            </div>
           </div>
         </DialogContent>
       </Dialog>
