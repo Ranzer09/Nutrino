@@ -3,8 +3,8 @@ import { useProduct } from "./features/products/useProduct";
 import { NutritionCard } from "./my-components/nutrition/NutritionCard";
 import { InsightsCard } from "./my-components/nutrition/InsightsCard";
 import { BarcodeScanner } from "./my-components/BarcodeScanner";
-import { Input } from "../components/ui/input";
-import { Button } from "../components/ui/button";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
 import { X, Scan, Search, Camera } from "lucide-react";
 import { toast } from "sonner";
 
@@ -80,7 +80,7 @@ function App() {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              className={`${isLoading || scanLoading ? "opacity-50 pointer-events-none" : "opacity-100"}h-14 text-lg pl-6 pr-12 rounded-2xl border-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500`}
+              className={`${isLoading || scanLoading ? "opacity-50 pointer-events-none" : "opacity-100"} h-14 text-lg pl-6 pr-12 rounded-2xl border-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500`}
               disabled={(isLoading || scanLoading) }
             />
             
@@ -109,7 +109,7 @@ function App() {
               variant="outline"
               onClick={() => setShowScanner(!showScanner)}
               disabled={(isLoading || scanLoading) }
-              className={`${isLoading || scanLoading ? "opacity-50 pointer-events-none" : "opacity-100"}h-14 px-8 rounded-2xl border-2 border-gray-300 hover:bg-gray-50 flex items-center gap-2`}
+              className={`${isLoading || scanLoading ? "opacity-50 pointer-events-none" : "opacity-100"} h-14 px-8 rounded-2xl border-2 border-gray-300 hover:bg-gray-50 flex items-center gap-2`}
             >
               <Camera size={20} />
               <span className="hidden sm:inline">Scan</span>
