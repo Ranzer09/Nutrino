@@ -2,14 +2,23 @@ name: Check API Health
 
 on:
   schedule:
-    - cron: '*/10 * * * *'
+    - cron: '*/10 * * * *' # every 10 minutes
   workflow_dispatch:
 
 jobs:
   ping:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Check Health of Api
+      - name: Print current time
+        run: date # helps you see when it actually runs
+
+      - name: Check Health of API
         run: |
+          echo "Checking backend API..."
           curl -f https://nutrino.onrender.com/docs
+
+          echo "Checking frontend..."
           curl -f https://nutrino-web.onrender.com/
+
+          echo "All checks passed!"
