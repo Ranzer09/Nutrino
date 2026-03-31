@@ -4,7 +4,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "../../ui/dialog";
+} from "../../../components/ui/dialog";
 
 type Props = {
   label: string;

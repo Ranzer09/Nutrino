@@ -3,10 +3,11 @@ import { useProduct } from "./features/products/useProduct";
 import { NutritionCard } from "./my-components/nutrition/NutritionCard";
 import { InsightsCard } from "./my-components/nutrition/InsightsCard";
 import { BarcodeScanner } from "./my-components/BarcodeScanner";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
+import { Input } from "../components/ui/input";
+import { Button } from "../components/ui/button";
 import { X, Scan, Search, Camera } from "lucide-react";
 import { toast } from "sonner";
+import { NutriscoreGuide } from "./my-components/nutrition/nutriscore";
 
 function App() {
   const [inputValue, setInputValue] = useState("");
@@ -171,10 +172,15 @@ function App() {
                   <p className="text-xs text-gray-500 mt-2 uppercase tracking-widest">{data.product.category}</p>
                 )}
               </div>
-
               {data.product.nutriscore && (
-                <div className={`px-6 py-3 rounded-2xl text-4xl font-black self-start ${getScoreBadgeClass(data.product.nutriscore)}`}>
-                  {data.product.nutriscore.toUpperCase()}
+                <div className="flex flex-col items-start gap-2">
+                  <div className={`px-8 py-4 rounded-3xl text-5xl font-black shadow-sm ${getScoreBadgeClass(data.product.nutriscore)}`}>
+                    {data.product.nutriscore.toUpperCase()}
+                  </div>
+
+                  <div className="flex flex-col items-start w-full">
+                    <NutriscoreGuide currentScore={data.product.nutriscore} />
+                  </div>
                 </div>
               )}
             </div>
@@ -196,6 +202,7 @@ function App() {
             </p>
           </div>
         )}
+        
 
         {/* Empty State */}
         {!data && !isLoading && !error && !showScanner && (
@@ -210,7 +217,9 @@ function App() {
           </div>
         )}
       </div>
+      
     </div>
+    
   );
 }
 

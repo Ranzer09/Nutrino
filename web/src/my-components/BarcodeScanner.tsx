@@ -62,68 +62,53 @@ export const BarcodeScanner: React.FC<Props> = ({
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [stopScanner]);
 
-  const startScanner = async () => {
-    try {
-      if (isRunningRef.current) return;
+const startScanner = async () => {
+  try {
+    if (isRunningRef.current) return;
 
-      setScanLoading(true);
-      setErrorMessage(null);
-      hasScannedRef.current = false;
-      isRunningRef.current = true;
-      await navigator.mediaDevices.getUserMedia({ video: true });
+    if (window.location.protocol !== "https:" && window.location.hostname !== "localhost") {
+      throw new Error("Camera access requires a secure (HTTPS) connection");
+    }
 
-      // HTTPS check (critical for camera)
-      if (location.protocol !== "https:" && location.hostname !== "localhost") {
-        throw new Error("Camera access requires a secure (HTTPS) connection");
+    setScanLoading(true);
+    setErrorMessage(null);
+    hasScannedRef.current = false;
+
+    const scanner = new Html5Qrcode("reader", { 
+      verbose: false,
+      formatsToSupport: [
+        Html5QrcodeSupportedFormats.CODE_128,
+        Html5QrcodeSupportedFormats.EAN_13,
+        Html5QrcodeSupportedFormats.UPC_A,
+        Html5QrcodeSupportedFormats.QR_CODE,
+      ]
+    });
+
+    scannerRef.current = scanner;
+
+    const config = {
+      fps: 10,
+      qrbox: { width: 250, height: 250 },
+      aspectRatio: 1.0,
+    };
+
+    await scanner.start(
+      { facingMode: "environment" }, 
+      config,
+      (decodedText: string) => {
+        if (hasScannedRef.current) return;
+        hasScannedRef.current = true;
+        toast.success("Scanned successfully!");
+        onScan(decodedText.trim());
+        stopScanner();
+      },
+      () => {
       }
+    );
 
-      // Get available cameras
-      const devices = await Html5Qrcode.getCameras();
-      if (!devices?.length) {
-        throw new Error("No camera found on this device");
-      }
-
-      // Prefer back camera
-      const cameraId =
-        devices.find((d) => d.label.toLowerCase().includes("back") || 
-        d.label.toLowerCase().includes("rear"))?.id ||
-        devices[0].id;
-
-      const scanner = new Html5Qrcode("reader", { 
-        verbose: false,           // reduce console spam
-        formatsToSupport: [       // Explicitly support barcodes + QR
-          Html5QrcodeSupportedFormats.CODE_128,
-          Html5QrcodeSupportedFormats.EAN_13,
-          Html5QrcodeSupportedFormats.UPC_A,
-          Html5QrcodeSupportedFormats.QR_CODE,
-        ]
-      });
-
-      scannerRef.current = scanner;
-
-      await scanner.start(
-        cameraId,
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },   // tighter box for barcodes
-          aspectRatio: 1.0,
-        },
-        (decodedText: string) => {
-          if (hasScannedRef.current) return;
-          hasScannedRef.current = true;
-
-          toast.success("Barcode scanned successfully!");
-          onScan(decodedText.trim());
-          stopScanner();
-        },
-        (error) => {
-          console.error(error)
-          setScanLoading(false);
-        }
-      );
-
-      setIsRunningUI(true);
-    } catch (err: any) {
+    isRunningRef.current = true;
+    setIsRunningUI(true);
+  } catch (err: any) {
       console.error("Scanner start error:", err);
 
       let userMessage = "Failed to start camera scanner";
@@ -144,12 +129,12 @@ export const BarcodeScanner: React.FC<Props> = ({
       toast.error(userMessage);
 
       // Fallback: offer image upload in future (we can add later)
-    } finally {
+  } finally {
       setTimeout(() => {
-        setScanLoading(false);
+    setScanLoading(false);
       }, 600);
-    }
-  };
+  }
+};
 
   return (
     <div className="mt-4 w-full">

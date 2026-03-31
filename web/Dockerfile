@@ -7,7 +7,7 @@ COPY package*.json ./
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --frozen-lockfile
 
-COPY . ./
+COPY . .
 
 RUN npm run build
 
