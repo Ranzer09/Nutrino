@@ -14,6 +14,7 @@ const nutriscoreTiers = [
   { grade: "C", color: "#fecb02", label: "Fair", desc: "Average quality, consume in moderation." },
   { grade: "D", color: "#ee8100", label: "Poor", desc: "Low nutritional quality, high in salt, sugar or fats." },
   { grade: "E", color: "#e63e11", label: "Low", desc: "Lowest quality, should be strictly limited." },
+  { grade: "N/A", color: "#9ca3af", label: "N/A", desc: "Not Applicable." },
 ];
 
 export const NutriscoreGuide = ({ currentScore }: { currentScore?: string }) => {
@@ -38,7 +39,7 @@ export const NutriscoreGuide = ({ currentScore }: { currentScore?: string }) => 
             <p className="text-sm text-gray-600 mb-1">Current Rating</p>
             <div className="flex items-center gap-4">
               <span 
-                className="text-6xl font-black italic" 
+                className="text-2xl font-black italic" 
                 style={{ color: activeTier?.color || "#9ca3af" }}
               >
                 {currentScore?.toUpperCase() || "—"}

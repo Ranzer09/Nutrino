@@ -64,6 +64,10 @@ export const NutritionCard: React.FC<Props> = ({ analysis, energy }) => {
         <h2 className="text-2xl font-bold text-gray-900">Nutrition Breakdown</h2>
       </div>
 
+      <h3 className=" py-4 text-lg font-bold text-gray-800">
+         Serving Size : {analysis.serving_quantity}g
+      </h3>
+
       {/* ENERGY SECTION - Very Prominent */}
       <div className="mb-10 bg-gradient-to-br from-slate-900 to-indigo-950 rounded-3xl p-7 text-white">
         <p className="uppercase text-xs tracking-[2px] text-indigo-300 font-medium mb-2">ENERGY</p>
@@ -96,7 +100,7 @@ export const NutritionCard: React.FC<Props> = ({ analysis, energy }) => {
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-3">
             <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
               Specific to Serving
-              <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[10px] rounded-md font-black uppercase tracking-widest">
+              <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-md rounded-md font-black uppercase tracking-widest">
                 {analysis.serving_quantity}g
               </span>
             </h3>
